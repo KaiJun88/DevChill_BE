@@ -1,36 +1,13 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const sendResetEmail = async (toEmail, token) => {
   if (!toEmail) throw new Error("Không có email người nhận");
+
   try {
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-      tls: {
-        rejectUnauthorized: false,
-      },
-    });
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
-    const emailText = `
-Xin chào ${toEmail},
-
-Chúng tôi nhận được yêu cầu thiết lập lại mật khẩu cho tài khoản của bạn trên DevChill. 
-Nếu bạn đã yêu cầu điều này, vui lòng nhấp vào liên kết bên dưới để thiết lập lại mật khẩu của bạn:
-
-${resetLink}
-
-Lưu ý:
-- Liên kết sẽ hết hạn sau 30 phút kể từ thời điểm yêu cầu.
-- Nếu bạn không yêu cầu thiết lập lại mật khẩu, vui lòng bỏ qua email này. Tài khoản của bạn vẫn an toàn và không có thay đổi nào được thực hiện.
-- Nếu cần hỗ trợ thêm, hãy liên hệ với chúng tôi qua Telegram.
-
-Cảm ơn bạn đã sử dụng DevChill!
-`;
+    const emailText = `Xin chào ${toEmail},\nNhấp vào link để thiết lập lại mật khẩu: ${resetLink}`;
 
     const emailHtml = `
     <h1>DevChill</h1>
@@ -42,23 +19,24 @@ Cảm ơn bạn đã sử dụng DevChill!
     <ul>
     <li>Liên kết sẽ hết hạn sau 5 phút kể từ thời điểm yêu cầu.</li>
     <li>Nếu bạn không yêu cầu, vui lòng bỏ qua email này.</li>
-    <li>Nếu cần hỗ trợ thêm, hãy liên hệ với chúng tôi qua Telegram.</li>
-   </ul>
+    </ul>
     <p>Cảm ơn bạn đã sử dụng DevChill!</p>
-    <p>DevChill — Bản quyền nội dung thuộc về KaiJun</p>
-`;
+    <p>DevChill — Bản quyền nội dung thuộc về tuandev</p>
+    `;
 
-    await transporter.sendMail({
-      from: `"DevChill" <${process.env.EMAIL_USER}>`,
+    const { data, error } = await resend.emails.send({
+      from: `DevChill <${process.env.EMAIL_USER}>`,
       to: toEmail,
       subject: "Thiết lập lại mật khẩu DevChill",
       text: emailText,
       html: emailHtml,
     });
 
+    if (error) throw new Error(error.message);
     console.log(`Email gửi đến ${toEmail} thành công`);
+    return true;
   } catch (err) {
     console.error("Gửi email thất bại:", err);
-    throw new Error("Không thể gửi email, kiểm tra cấu hình SMTP");
+    throw new Error("Không thể gửi email, kiểm tra cấu hình SMTP/Resend");
   }
 };
