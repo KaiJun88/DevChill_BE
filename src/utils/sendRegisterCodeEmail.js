@@ -1,12 +1,18 @@
-import { Resend } from "resend";
-
-// Khởi tạo Resend với API Key từ biến môi trường
-const resend = new Resend(process.env.RESEND_API_KEY);
+import nodemailer from "nodemailer";
 
 export const sendRegisterCodeEmail = async (toEmail, code) => {
   if (!toEmail) throw new Error("Không có email người nhận");
 
   try {
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
     const emailText = `
 Xin chào ${toEmail},
 
@@ -23,7 +29,6 @@ Mã xác thực của bạn là: ${code}
 
 Cảm ơn bạn đã sử dụng DevChill!
 `;
-
     const emailHtml = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #eee;border-radius:10px;overflow:hidden">
       
@@ -67,26 +72,23 @@ Cảm ơn bạn đã sử dụng DevChill!
       </div>
 
       <div style="background:#f5f5f5;padding:15px;text-align:center;font-size:12px;color:#777">
-        © ${new Date().getFullYear()} DevChill. All rights reserved.
+        © 2026 DevChill. All rights reserved.
       </div>
 
     </div>
     `;
 
-    // Gọi API Resend để gửi
-    const data = await resend.emails.send({
-      from: `"DevChill" <onboarding@resend.dev>`, // Đang dùng email test của Resend
+    await transporter.sendMail({
+      from: `"DevChill" <${process.env.EMAIL_USER}>`,
       to: toEmail,
       subject: "Mã xác thực đăng ký DevChill",
       text: emailText,
       html: emailHtml,
     });
 
-    console.log(
-      `[MAILER] Gửi OTP đến ${toEmail} thành công. Resend ID: ${data?.id}`,
-    );
+    console.log(`Gửi OTP đến ${toEmail} thành công`);
   } catch (err) {
-    console.error("[MAILER ERROR] Gửi email thất bại:", err);
-    throw new Error("Không thể gửi email, kiểm tra cấu hình Resend");
+    console.error("Gửi email thất bại:", err);
+    throw new Error("Không thể gửi email, kiểm tra SMTP");
   }
 };
