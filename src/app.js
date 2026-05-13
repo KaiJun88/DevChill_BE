@@ -31,7 +31,11 @@ const app = express();
 
 app.use(
   cors({
-    origin: ["https://dev-chill-fe.vercel.app", "http://localhost:5173"],
+    origin: [
+      "https://dev-chill-fe.vercel.app",
+      "http://localhost:5173",
+      "https://devchill.site",
+    ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
     credentials: true,
