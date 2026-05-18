@@ -9,7 +9,8 @@ const initTables = async () => {
     // 2. BẮT ĐẦU TRANSACTION
     await client.query("BEGIN");
     console.log("⏳ Bắt đầu khởi tạo cấu trúc Database...");
-
+    await client.query("CREATE EXTENSION IF NOT EXISTS unaccent;");
+    console.log("✅ Đã bật extension unaccent thành công!");
     // ================== EXISTING TABLES ==================
     // 3. THAY TẤT CẢ 'pool.query' THÀNH 'client.query'
     await client.query(`
